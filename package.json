@@ -11,16 +11,20 @@
     "seed": "knex seed:run",
     "setup": "npm run migrate && npm run seed"
   },
-  "keywords": ["appointments", "scheduling", "booking", "stripe"],
+  "keywords": [
+    "appointments",
+    "scheduling",
+    "booking",
+    "stripe"
+  ],
   "author": "Chris Kendall",
   "license": "MIT",
   "dependencies": {
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "bcryptjs": "^2.4.3",
     "connect-flash": "^0.1.1",
     "dayjs": "^1.11.10",
     "dotenv": "^16.3.1",
-    "pug": "^3.0.2",
-    "sqlite3": "^5.1.7",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "express-validator": "^7.0.1",
@@ -30,7 +34,10 @@
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.6.5",
     "nodemailer": "^6.9.7",
+    "pug": "^3.0.2",
+    "sqlite3": "^5.1.7",
     "stripe": "^14.10.0",
+    "twilio": "^6.0.2",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

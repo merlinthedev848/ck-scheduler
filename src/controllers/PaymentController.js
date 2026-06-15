@@ -4,6 +4,8 @@ const StripeService = require('../services/StripeService');
 const EmailService = require('../services/EmailService');
 const WebhookService = require('../services/WebhookService');
 const SettingModel = require('../models/Setting');
+const PayPalService = require('../services/PayPalService');
+const SmsService = require('../services/SmsService');
 
 class PaymentController {
   static async webhook(req, res) {
@@ -24,9 +26,10 @@ class PaymentController {
         // Update appointment to confirmed
         await AppointmentModel.updateStatus(apptId, 'confirmed');
 
-        // Send confirmation email
+        // Send confirmation emails and SMS
         const appt = await AppointmentModel.findById(apptId);
         await EmailService.sendConfirmation(appt, process.env.APP_URL || 'http://localhost:3000');
+        await SmsService.sendConfirmation(appt);
 
         // Dispatch system webhook
         await WebhookService.dispatch('payment_success', { appointment: appt, session });
@@ -64,6 +67,35 @@ class PaymentController {
       }
       res.render('booking/payment_cancel', { title: 'Payment Cancelled', layout: false });
     } catch (e) { res.status(500).render('errors/500'); }
+  }
+
+  static async paypalCapture(req, res) {
+    try {
+      const { token, appointment_hash } = req.query; // token is the paypal order ID
+      const orderData = await PayPalService.captureOrder(token);
+      
+      if (orderData.status === 'COMPLETED') {
+        const appt = await AppointmentModel.findByHash(appointment_hash);
+        const payment = await PaymentModel.findByAppointment(appt.id);
+        
+        await PaymentModel.updateStatus(payment.id, 'paid');
+        // We'll just update paypal_capture_id dynamically for now, or assume the model ignores unknown columns if not specified, but we created it. Let's do it safely:
+        await AppointmentModel.updateStatus(appt.id, 'confirmed');
+
+        const fullAppt = await AppointmentModel.findById(appt.id);
+        await EmailService.sendConfirmation(fullAppt, process.env.APP_URL || 'http://localhost:3000');
+        await SmsService.sendConfirmation(fullAppt);
+        await WebhookService.dispatch('payment_success', { appointment: fullAppt, orderData });
+        
+        const settings = await SettingModel.getAll();
+        res.render('booking/confirmation', { title: 'Payment Successful', appt: fullAppt, settings, layout: false });
+      } else {
+        res.redirect(`/payments/cancel?appointment_hash=${appointment_hash}`);
+      }
+    } catch (e) {
+      console.error('[PayPal Capture Error]', e);
+      res.redirect(`/payments/cancel?appointment_hash=${req.query.appointment_hash}`);
+    }
   }
 
   static async createSession(req, res) {

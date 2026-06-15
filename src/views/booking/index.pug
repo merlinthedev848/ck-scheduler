@@ -354,6 +354,16 @@ html(lang="en")
               .form-group
                 label.form-label Additional Notes (Optional)
                 textarea.form-control(id="bf-notes" rows="2")
+              #payment-gateway-selection(style="display:none;")
+                h5.mt-4 Payment Method
+                if settings.stripe_enabled === '1'
+                  .form-check.mb-2
+                    input.form-check-input(type="radio" name="gateway" id="gateway_stripe" value="stripe" checked)
+                    label.form-check-label(for="gateway_stripe") Pay by Credit Card (Stripe)
+                if settings.paypal_enabled === '1'
+                  .form-check.mb-3
+                    input.form-check-input(type="radio" name="gateway" id="gateway_paypal" value="paypal" checked=(settings.stripe_enabled !== '1'))
+                    label.form-check-label(for="gateway_paypal") Pay with PayPal
 
       .wizard-footer
         button.btn.btn-outline#btn-back(onclick="prevStep()" style="visibility:hidden") <i class="bi bi-arrow-left"></i> Back
@@ -393,6 +403,14 @@ html(lang="en")
           nextBtn.style.display = 'none';
           submitBtn.style.display = 'inline-flex';
           updateSummary();
+          
+          // Show payment gateway if price exists
+          const gatewayDiv = document.getElementById('payment-gateway-selection');
+          if (gatewayDiv && parseFloat(state.price) > 0) {
+              gatewayDiv.style.display = 'block';
+          } else if (gatewayDiv) {
+              gatewayDiv.style.display = 'none';
+          }
         } else {
           nextBtn.style.display = 'inline-flex';
           submitBtn.style.display = 'none';
@@ -572,6 +590,8 @@ html(lang="en")
         loader.style.display = 'inline-block';
         txt.innerText = ' Processing...';
 
+        const gateway = document.querySelector('input[name="gateway"]:checked');
+
         const payload = {
           service_id: state.serviceId,
           provider_id: state.providerId,
@@ -581,7 +601,8 @@ html(lang="en")
           last_name: document.getElementById('bf-lname').value,
           email: document.getElementById('bf-email').value,
           phone: document.getElementById('bf-phone').value,
-          notes: document.getElementById('bf-notes').value
+          notes: document.getElementById('bf-notes').value,
+          gateway: gateway ? gateway.value : null
         };
 
         try {

@@ -8,7 +8,9 @@ const AvailabilityService = require('../services/AvailabilityService');
 const StripeService = require('../services/StripeService');
 const EmailService = require('../services/EmailService');
 const WebhookService = require('../services/WebhookService');
+const SmsService = require('../services/SmsService');
 const SettingModel = require('../models/Setting');
+const PayPalService = require('../services/PayPalService');
 const dayjs = require('dayjs');
 
 class BookingController {
@@ -63,7 +65,7 @@ class BookingController {
 
   static async book(req, res) {
     try {
-      const { service_id, provider_id, date, time, first_name, last_name, email, phone, notes } = req.body;
+      const { service_id, provider_id, date, time, first_name, last_name, email, phone, notes, gateway = 'stripe' } = req.body;
 
       const service  = await ServiceModel.findById(service_id);
       const provider = await UserModel.findById(provider_id);
@@ -90,31 +92,56 @@ class BookingController {
         notes:          notes || null
       });
 
-      // If service requires payment → Stripe
+      // If service requires payment
       if (service.requires_payment && parseFloat(service.price) > 0) {
         const settings = await SettingModel.getAll();
-        if (settings.stripe_enabled === '1') {
+
+        if (gateway === 'paypal' && settings.paypal_enabled === '1') {
+          const order = await PayPalService.createOrder({
+            appointment,
+            service,
+            appUrl: process.env.APP_URL || 'http://localhost:3000'
+          });
+
+          await PaymentModel.create({
+            appointment_id: appointment.id,
+            paypal_order_id: order.id,
+            amount: service.price,
+            currency: service.currency || 'GBP',
+            status: 'pending',
+            gateway: 'paypal'
+          });
+
+          const approveLink = order.links.find(link => link.rel === 'approve');
+          return res.json({ redirect: approveLink.href });
+        }
+
+        if (gateway === 'stripe' && settings.stripe_enabled === '1') {
           const session = await StripeService.createCheckoutSession({
             appointment,
             service,
             customer,
             appUrl: process.env.APP_URL || 'http://localhost:3000'
           });
-          // Create pending payment record
+          
           await PaymentModel.create({
             appointment_id:   appointment.id,
             stripe_session_id: session.id,
             amount:            service.price,
             currency:          service.currency || 'GBP',
-            status:            'pending'
+            status:            'pending',
+            gateway:           'stripe'
           });
           return res.json({ redirect: session.url });
         }
+        
+        return res.status(400).json({ error: 'Selected payment gateway is not enabled.' });
       }
 
       // Free service — confirm immediately
       const fullAppt = await AppointmentModel.findById(appointment.id);
       await EmailService.sendConfirmation(fullAppt, process.env.APP_URL || 'http://localhost:3000');
+      await SmsService.sendConfirmation(fullAppt);
       await WebhookService.dispatch('appointment_booked', fullAppt);
       return res.json({ redirect: `/booking/confirm/${appointment.hash}` });
 
@@ -152,6 +179,7 @@ class BookingController {
       await AppointmentModel.updateStatus(appt.id, 'cancelled');
       const updatedAppt = await AppointmentModel.findById(appt.id);
       await EmailService.sendCancellation(updatedAppt);
+      await SmsService.sendCancellation(updatedAppt);
       await WebhookService.dispatch('appointment_cancelled', updatedAppt);
       req.flash('success', 'Your appointment has been cancelled.');
       res.redirect(`/booking/cancel/${req.params.hash}`);

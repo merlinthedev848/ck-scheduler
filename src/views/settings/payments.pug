@@ -8,6 +8,7 @@ block content
         a.list-group-item.list-group-item-action(href="/settings/business") Business Logic
         a.list-group-item.list-group-item-action(href="/settings/booking") Booking Page
         a.list-group-item.list-group-item-action.active(href="/settings/payments") Payments
+        a.list-group-item.list-group-item-action(href="/settings/notifications") Notifications
         a.list-group-item.list-group-item-action(href="/settings/api") API Access
     
     .col-md-9
@@ -23,13 +24,33 @@ block content
             
             .mb-3
               label.form-label Stripe Public Key
-              input.form-control(type="text" name="stripe_public_key" value=settings.stripe_public_key placeholder="pk_test_...")
+              input.form-control(type="text" name="stripe_pub_key" value=settings.stripe_pub_key placeholder="pk_test_...")
             .mb-3
               label.form-label Stripe Secret Key
               input.form-control(type="password" name="stripe_secret_key" value=settings.stripe_secret_key placeholder="sk_test_...")
-            .mb-3
+            .mb-4
               label.form-label Stripe Webhook Secret
               input.form-control(type="password" name="stripe_webhook_secret" value=settings.stripe_webhook_secret placeholder="whsec_...")
               .form-text Required to verify webhook signatures. Webhook URL: <code>https://yourdomain.com/payments/webhook</code>
+
+            hr.my-4
+
+            h5.mb-3 PayPal Integration
+            .mb-4
+              .form-check.form-switch
+                input.form-check-input(type="checkbox" name="paypal_enabled" value="1" checked=(settings.paypal_enabled==='1'))
+                label.form-check-label Enable PayPal Payments
+            
+            .mb-3
+              label.form-label PayPal Client ID
+              input.form-control(type="text" name="paypal_client_id" value=settings.paypal_client_id placeholder="...")
+            .mb-3
+              label.form-label PayPal Client Secret
+              input.form-control(type="password" name="paypal_client_secret" value=settings.paypal_client_secret placeholder="...")
+            .mb-4
+              label.form-label Mode
+              select.form-select(name="paypal_mode")
+                option(value="sandbox" selected=(settings.paypal_mode==='sandbox')) Sandbox
+                option(value="live" selected=(settings.paypal_mode==='live')) Live
             
             button.btn.btn-primary(type="submit") Save Settings

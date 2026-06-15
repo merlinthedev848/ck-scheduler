@@ -7,6 +7,10 @@ const { requireAdmin } = require('../middleware/auth');
 router.post('/webhook',         PaymentController.webhook);
 router.get('/success',          PaymentController.success);
 router.get('/cancel',           PaymentController.cancel);
+
+// PayPal Return Routes
+router.get('/paypal/capture', PaymentController.paypalCapture);
+
 router.post('/create-session',  PaymentController.createSession);
 router.get('/history',          requireAdmin, PaymentController.history);
 router.post('/refund/:id',      requireAdmin, PaymentController.refund);

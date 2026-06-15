@@ -59,16 +59,44 @@ class SettingsController {
 
   static async savePayments(req, res) {
     try {
-      const { stripe_enabled, stripe_public_key, stripe_secret_key, stripe_webhook_secret } = req.body;
-      await SettingModel.setMany({
-        stripe_enabled: stripe_enabled ? '1' : '0',
-        stripe_public_key,
-        stripe_secret_key,
-        stripe_webhook_secret
-      });
+      const keys = ['stripe_enabled', 'stripe_pub_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paypal_enabled', 'paypal_client_id', 'paypal_client_secret', 'paypal_mode'];
+      for (const k of keys) {
+        let val = req.body[k] || '';
+        if (k.endsWith('_enabled') && val !== '1') val = '0';
+        await SettingModel.set(k, val);
+      }
       req.flash('success', 'Payment settings saved.');
       res.redirect('/settings/payments');
-    } catch (e) { req.flash('error', e.message); res.redirect('/settings/payments'); }
+    } catch (e) {
+      req.flash('error', e.message);
+      res.redirect('/settings/payments');
+    }
+  }
+
+  static async notifications(req, res) {
+    try {
+      const settings = await SettingModel.getAll();
+      res.render('settings/notifications', { title: 'Notification Settings', settings, path: '/settings' });
+    } catch (e) {
+      req.flash('error', e.message);
+      res.redirect('/calendar');
+    }
+  }
+
+  static async saveNotifications(req, res) {
+    try {
+      const keys = ['sms_enabled', 'twilio_account_sid', 'twilio_auth_token', 'twilio_from_number'];
+      for (const k of keys) {
+        let val = req.body[k] || '';
+        if (k === 'sms_enabled' && val !== '1') val = '0';
+        await SettingModel.set(k, val);
+      }
+      req.flash('success', 'Notification settings saved.');
+      res.redirect('/settings/notifications');
+    } catch (e) {
+      req.flash('error', e.message);
+      res.redirect('/settings/notifications');
+    }
   }
 
   static async api(req, res) {

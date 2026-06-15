@@ -11,6 +11,10 @@ router.get('/booking',         requireAdmin, SettingsController.booking);
 router.post('/booking',        requireAdmin, SettingsController.saveBooking);
 router.get('/payments',        requireAdmin, SettingsController.payments);
 router.post('/payments',       requireAdmin, SettingsController.savePayments);
+
+router.get('/notifications',   requireAdmin, SettingsController.notifications);
+router.post('/notifications',  requireAdmin, SettingsController.saveNotifications);
+
 router.get('/api',             requireAdmin, SettingsController.api);
 router.post('/api/regenerate', requireAdmin, SettingsController.regenerateApiToken);
 

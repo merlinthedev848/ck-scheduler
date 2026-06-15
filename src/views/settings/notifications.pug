@@ -1,0 +1,36 @@
+extends ../layout
+
+block content
+  .row
+    .col-md-3
+      .list-group.mb-4
+        a.list-group-item.list-group-item-action(href="/settings/general") General
+        a.list-group-item.list-group-item-action(href="/settings/business") Business Logic
+        a.list-group-item.list-group-item-action(href="/settings/booking") Booking Page
+        a.list-group-item.list-group-item-action(href="/settings/payments") Payments
+        a.list-group-item.list-group-item-action.active(href="/settings/notifications") Notifications
+        a.list-group-item.list-group-item-action(href="/settings/api") API Access
+    
+    .col-md-9
+      .card.shadow-sm
+        .card-header.bg-white
+          h5.m-0 SMS Notifications (Twilio)
+        .card-body
+          form(action="/settings/notifications" method="POST")
+            .mb-4
+              .form-check.form-switch
+                input.form-check-input(type="checkbox" name="sms_enabled" value="1" checked=(settings.sms_enabled==='1'))
+                label.form-check-label Enable SMS Notifications
+            
+            .mb-3
+              label.form-label Twilio Account SID
+              input.form-control(type="text" name="twilio_account_sid" value=settings.twilio_account_sid placeholder="AC...")
+            .mb-3
+              label.form-label Twilio Auth Token
+              input.form-control(type="password" name="twilio_auth_token" value=settings.twilio_auth_token placeholder="...")
+            .mb-4
+              label.form-label Twilio From Number
+              input.form-control(type="text" name="twilio_from_number" value=settings.twilio_from_number placeholder="+1234567890")
+              .form-text Required format: +[country_code][number]
+            
+            button.btn.btn-primary(type="submit") Save Settings
