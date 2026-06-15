@@ -1,0 +1,54 @@
+extends ../../layout
+
+block content
+  .row
+    .col-md-3
+      include ../_menu
+    
+    .col-md-9
+      .card.shadow-sm
+        .card-header.bg-white
+          h5.m-0= title
+        .card-body
+          - const isEdit = !!webhook.id
+          - const actionUrl = isEdit ? `/settings/webhooks/${webhook.id}?_method=PUT` : '/settings/webhooks'
+          
+          form(action=actionUrl method="POST")
+            .mb-3
+              label.form-label Webhook Name
+              input.form-control(type="text" name="name" value=webhook.name required placeholder="e.g. Zapier Integration")
+            
+            .mb-3
+              label.form-label Endpoint URL
+              input.form-control(type="url" name="url" value=webhook.url required placeholder="https://...")
+            
+            .mb-4
+              label.form-label Secret Key (Optional)
+              input.form-control(type="password" name="secret_key" value=webhook.secret_key placeholder="Used for HMAC SHA256 Signature")
+            
+            .mb-4
+              label.form-label Events to Trigger On
+              .card.bg-light
+                .card-body
+                  - const selectedActions = isEdit ? (typeof webhook.actions === 'string' ? JSON.parse(webhook.actions) : webhook.actions) : []
+                  .row
+                    .col-md-6
+                      .form-check.mb-2
+                        input.form-check-input(type="checkbox" name="actions[]" value="appointment_booked" id="act_booked" checked=selectedActions.includes('appointment_booked'))
+                        label.form-check-label(for="act_booked") Appointment Booked
+                      .form-check.mb-2
+                        input.form-check-input(type="checkbox" name="actions[]" value="appointment_cancelled" id="act_cancelled" checked=selectedActions.includes('appointment_cancelled'))
+                        label.form-check-label(for="act_cancelled") Appointment Cancelled
+                    .col-md-6
+                      .form-check.mb-2
+                        input.form-check-input(type="checkbox" name="actions[]" value="payment_success" id="act_paid" checked=selectedActions.includes('payment_success'))
+                        label.form-check-label(for="act_paid") Payment Success
+            
+            .mb-4
+              .form-check.form-switch
+                input.form-check-input(type="checkbox" name="is_active" value="1" id="is_active" checked=(isEdit ? webhook.is_active : true))
+                label.form-check-label(for="is_active") Active
+            
+            .d-flex.justify-content-between
+              a.btn.btn-outline-secondary(href="/settings/webhooks") Cancel
+              button.btn.btn-primary(type="submit") Save Webhook

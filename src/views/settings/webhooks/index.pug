@@ -1,0 +1,50 @@
+extends ../../layout
+
+block content
+  .row
+    .col-md-3
+      include ../_menu
+    
+    .col-md-9
+      .d-flex.justify-content-between.align-items-center.mb-3
+        h4 Webhooks
+        a.btn.btn-primary(href="/settings/webhooks/create")
+          i.bi.bi-plus-lg
+          |  Add Webhook
+
+      .card.shadow-sm
+        .card-body.p-0
+          if webhooks && webhooks.length > 0
+            .table-responsive
+              table.table.table-hover.mb-0
+                thead.table-light
+                  tr
+                    th Name
+                    th URL
+                    th Actions
+                    th Status
+                    th.text-end Manage
+                tbody
+                  each w in webhooks
+                    tr
+                      td.align-middle= w.name
+                      td.align-middle
+                        code= w.url
+                      td.align-middle
+                        - const actions = JSON.parse(w.actions || '[]')
+                        each a in actions
+                          span.badge.bg-secondary.me-1= a
+                      td.align-middle
+                        if w.is_active
+                          span.badge.bg-success Active
+                        else
+                          span.badge.bg-danger Inactive
+                      td.align-middle.text-end
+                        a.btn.btn-sm.btn-outline-primary.me-2(href=`/settings/webhooks/${w.id}/edit`) Edit
+                        form.d-inline(action=`/settings/webhooks/${w.id}?_method=DELETE` method="POST" onsubmit="return confirm('Are you sure you want to delete this webhook?');")
+                          button.btn.btn-sm.btn-outline-danger(type="submit") Delete
+          else
+            .p-5.text-center.text-muted
+              i.bi.bi-plug.display-4.mb-3
+              h5 No Webhooks Configured
+              p You haven't added any outbound webhooks yet.

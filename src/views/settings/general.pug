@@ -3,13 +3,8 @@ extends ../layout
 block content
   .row
     .col-md-3
-      .list-group.mb-4
-        a.list-group-item.list-group-item-action.active(href="/settings/general") General
-        a.list-group-item.list-group-item-action(href="/settings/business") Business Logic
-        a.list-group-item.list-group-item-action(href="/settings/booking") Booking Page
-        a.list-group-item.list-group-item-action(href="/settings/payments") Payments
-        a.list-group-item.list-group-item-action(href="/settings/notifications") Notifications
-        a.list-group-item.list-group-item-action(href="/settings/api") API Access
+      include _menu
+    
     
     .col-md-9
       .card.shadow-sm

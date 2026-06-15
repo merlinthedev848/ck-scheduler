@@ -55,6 +55,7 @@ app.use('/services', require('./src/routes/services'));
 app.use('/providers', require('./src/routes/providers'));
 app.use('/customers', require('./src/routes/customers'));
 app.use('/settings', require('./src/routes/settings'));
+app.use('/settings/webhooks', require('./src/routes/webhooks'));
 app.use('/payments', require('./src/routes/payments'));
 app.use('/api/v1', require('./src/routes/api/v1'));
 

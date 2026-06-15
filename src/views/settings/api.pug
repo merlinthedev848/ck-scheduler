@@ -3,13 +3,8 @@ extends ../layout
 block content
   .row
     .col-md-3
-      .list-group.mb-4
-        a.list-group-item.list-group-item-action(href="/settings/general") General
-        a.list-group-item.list-group-item-action(href="/settings/business") Business Logic
-        a.list-group-item.list-group-item-action(href="/settings/booking") Booking Page
-        a.list-group-item.list-group-item-action(href="/settings/payments") Payments
-        a.list-group-item.list-group-item-action(href="/settings/notifications") Notifications
-        a.list-group-item.list-group-item-action.active(href="/settings/api") API Access
+      include _menu
+    
     
     .col-md-9
       .card.shadow-sm
@@ -28,10 +23,61 @@ block content
                 i.bi.bi-clipboard
                 |  Copy
           
-          hr.mb-4
+          hr.my-4
+          
+          h5 REST API Documentation
+          p.text-muted Connect external applications to your scheduler using these endpoints.
+
+          .accordion#apiDocs
+            .accordion-item
+              h2.accordion-header
+                button.accordion-button.collapsed(type="button" data-bs-toggle="collapse" data-bs-target="#apiAuth") Authentication
+              .accordion-collapse.collapse#apiAuth(data-bs-parent="#apiDocs")
+                .accordion-body
+                  p All requests to the API must include the <code>X-Api-Key</code> header.
+                  pre.bg-light.p-3.rounded
+                    code GET /api/v1/appointments
+                    br
+                    code X-Api-Key: #{user.api_token}
+            
+            .accordion-item
+              h2.accordion-header
+                button.accordion-button.collapsed(type="button" data-bs-toggle="collapse" data-bs-target="#apiEndpoints") Available Endpoints
+              .accordion-collapse.collapse#apiEndpoints(data-bs-parent="#apiDocs")
+                .accordion-body
+                  table.table.table-sm
+                    thead
+                      tr
+                        th Resource
+                        th Endpoints
+                    tbody
+                      tr
+                        td: strong Appointments
+                        td
+                          div <code>GET /api/v1/appointments</code> (list)
+                          div <code>GET /api/v1/appointments/:id</code> (get one)
+                          div <code>POST /api/v1/appointments</code> (create)
+                          div <code>PUT /api/v1/appointments/:id</code> (update)
+                          div <code>DELETE /api/v1/appointments/:id</code> (delete)
+                      tr
+                        td: strong Services
+                        td
+                          div <code>GET /api/v1/services</code> (list)
+                          div <code>POST /api/v1/services</code> (create)
+                      tr
+                        td: strong Customers
+                        td
+                          div <code>GET /api/v1/customers</code> (list)
+                          div <code>POST /api/v1/customers</code> (create)
+                      tr
+                        td: strong Providers
+                        td
+                          div <code>GET /api/v1/providers</code> (list)
+
+          hr.my-5
           
           form(action="/settings/api/regenerate" method="POST" onsubmit="return confirm('Regenerating your token will invalidate any existing API integrations using the old token. Continue?');")
-            h6 Danger Zone
+            h6.text-danger Danger Zone
             p.text-muted If you suspect your API token has been compromised, you can regenerate a new one.
             button.btn.btn-outline-danger(type="submit") Regenerate API Token
 
