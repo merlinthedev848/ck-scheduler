@@ -7,11 +7,11 @@ block content
     
     
     .col-md-9
-      .card.shadow-sm
-        .card-header.bg-white
-          h5.m-0 SMS Notifications (Twilio)
-        .card-body
-          form(action="/settings/notifications" method="POST")
+      form(action="/settings/notifications" method="POST")
+        .card.shadow-sm.mb-4
+          .card-header.bg-white
+            h5.m-0 SMS Notifications (Twilio)
+          .card-body
             .mb-4
               .form-check.form-switch
                 input.form-check-input(type="checkbox" name="sms_enabled" value="1" checked=(settings.sms_enabled==='1'))
@@ -27,5 +27,43 @@ block content
               label.form-label Twilio From Number
               input.form-control(type="text" name="twilio_from_number" value=settings.twilio_from_number placeholder="+1234567890")
               .form-text Required format: +[country_code][number]
-            
-            button.btn.btn-primary(type="submit") Save Settings
+
+        .card.shadow-sm.mb-4
+          .card-header.bg-white
+            h5.m-0 SMTP Email Configuration
+          .card-body
+            .row.mb-3
+              .col-md-8
+                label.form-label SMTP Host
+                input.form-control(type="text" name="smtp_host" value=settings.smtp_host placeholder="smtp.gmail.com")
+              .col-md-4
+                label.form-label SMTP Port
+                input.form-control(type="number" name="smtp_port" value=settings.smtp_port placeholder="587")
+            .row.mb-3
+              .col-md-6
+                label.form-label SMTP Username
+                input.form-control(type="text" name="smtp_user" value=settings.smtp_user placeholder="email@example.com")
+              .col-md-6
+                label.form-label SMTP Password / App Password
+                input.form-control(type="password" name="smtp_pass" value=settings.smtp_pass placeholder="...")
+            .mb-3
+              .form-check.form-switch
+                input.form-check-input(type="checkbox" name="smtp_secure" value="1" checked=(settings.smtp_secure==='1'))
+                label.form-check-label Use TLS/SSL (Secure)
+
+        .card.shadow-sm.mb-4
+          .card-header.bg-white
+            h5.m-0 Email Templates
+          .card-body
+            p.text-muted Available variables: <code>{{customer_name}}</code>, <code>{{service_name}}</code>, <code>{{date}}</code>, <code>{{time}}</code>, <code>{{business_name}}</code>
+            .mb-4
+              label.form-label Customer Confirmation Email
+              textarea.form-control(name="email_template_confirmation" rows="5")= settings.email_template_confirmation || ''
+            .mb-4
+              label.form-label Customer Cancellation Email
+              textarea.form-control(name="email_template_cancellation" rows="5")= settings.email_template_cancellation || ''
+            .mb-4
+              label.form-label Admin New Booking Notice
+              textarea.form-control(name="email_template_admin_notice" rows="5")= settings.email_template_admin_notice || ''
+
+        button.btn.btn-primary.btn-lg.w-100(type="submit") Save All Settings

@@ -76,7 +76,7 @@ class SettingsController {
   static async notifications(req, res) {
     try {
       const settings = await SettingModel.getAll();
-      res.render('settings/notifications', { title: 'Notification Settings', settings, path: '/settings' });
+      res.render('settings/notifications', { title: 'Notification Settings', settings, path: '/settings/notifications' });
     } catch (e) {
       req.flash('error', e.message);
       res.redirect('/calendar');
@@ -85,10 +85,14 @@ class SettingsController {
 
   static async saveNotifications(req, res) {
     try {
-      const keys = ['sms_enabled', 'twilio_account_sid', 'twilio_auth_token', 'twilio_from_number'];
+      const keys = [
+        'sms_enabled', 'twilio_account_sid', 'twilio_auth_token', 'twilio_from_number',
+        'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_secure',
+        'email_template_confirmation', 'email_template_cancellation', 'email_template_admin_notice'
+      ];
       for (const k of keys) {
         let val = req.body[k] || '';
-        if (k === 'sms_enabled' && val !== '1') val = '0';
+        if ((k === 'sms_enabled' || k === 'smtp_secure') && val !== '1') val = '0';
         await SettingModel.set(k, val);
       }
       req.flash('success', 'Notification settings saved.');

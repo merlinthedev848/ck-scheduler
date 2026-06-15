@@ -36,17 +36,29 @@ app.use(session({
 // ─── Flash Messages ───────────────────────────────────────────────────────────
 app.use(flash());
 
+// ─── Setup Middleware ─────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  if (process.env.SETUP_COMPLETED !== 'true') {
+    if (req.path.startsWith('/setup') || req.path.match(/\.(css|js|png|jpg|svg)$/)) {
+      return next();
+    }
+    return res.redirect('/setup');
+  }
+  next();
+});
+
 // ─── Global View Locals ───────────────────────────────────────────────────────
 app.use((req, res, next) => {
-  res.locals.user = req.session.user || null;
-  res.locals.success = req.flash('success');
-  res.locals.error = req.flash('error');
+  res.locals.user = req.session ? req.session.user : null;
+  res.locals.success = req.flash ? req.flash('success') : [];
+  res.locals.error = req.flash ? req.flash('error') : [];
   res.locals.appName = process.env.APP_NAME || 'CK Scheduler';
   res.locals.appUrl = process.env.APP_URL || `http://localhost:${process.env.APP_PORT || 3000}`;
   next();
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
+app.use('/setup', require('./src/routes/setup'));
 app.use('/', require('./src/routes/auth'));
 app.use('/booking', require('./src/routes/booking'));
 app.use('/calendar', require('./src/routes/calendar'));
