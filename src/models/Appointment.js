@@ -16,7 +16,6 @@ class AppointmentModel {
         'services.name as service_name',
         'services.duration as service_duration',
         'services.price as service_price',
-        'services.color as service_color',
         'providers.first_name as provider_first_name',
         'providers.last_name as provider_last_name',
         'providers.email as provider_email',
