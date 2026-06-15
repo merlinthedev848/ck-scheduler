@@ -15,8 +15,23 @@ class ServicesController {
 
   static async create(req, res) {
     try {
-      await ServiceModel.create(req.body);
-      req.flash('success', 'Service created.');
+      const { name, category_id, duration, price, description, requires_payment, custom_questions } = req.body;
+      
+      let parsedQuestions = null;
+      if (custom_questions) {
+         parsedQuestions = JSON.stringify(custom_questions.split(',').map(q => q.trim()).filter(q => q));
+      }
+
+      await ServiceModel.create({
+        name,
+        category_id: category_id || null,
+        duration: parseInt(duration),
+        price: parseFloat(price),
+        description,
+        requires_payment: requires_payment ? true : false,
+        custom_questions: parsedQuestions
+      });
+      req.flash('success', 'Service created successfully.');
       res.redirect('/services');
     } catch (e) {
       req.flash('error', e.message);
@@ -26,7 +41,22 @@ class ServicesController {
 
   static async update(req, res) {
     try {
-      await ServiceModel.update(req.params.id, req.body);
+      const { name, category_id, duration, price, description, requires_payment, custom_questions } = req.body;
+      
+      let parsedQuestions = null;
+      if (custom_questions) {
+         parsedQuestions = JSON.stringify(custom_questions.split(',').map(q => q.trim()).filter(q => q));
+      }
+
+      await ServiceModel.update(req.params.id, {
+        name,
+        category_id: category_id || null,
+        duration: parseInt(duration),
+        price: parseFloat(price),
+        description,
+        requires_payment: requires_payment ? true : false,
+        custom_questions: parsedQuestions
+      });
       req.flash('success', 'Service updated.');
       res.redirect('/services');
     } catch (e) {

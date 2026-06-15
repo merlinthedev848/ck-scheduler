@@ -270,7 +270,7 @@ html(lang="en")
         h2.step-title Choose a Service
         .grid-list
           each s in services
-            .card-select(data-service-id=s.id data-service-name=s.name data-duration=s.duration data-price=s.price onclick="selectService(this)")
+            .card-select(data-service-id=s.id data-service-name=s.name data-duration=s.duration data-price=s.price data-custom-questions=(s.custom_questions || "[]") onclick="selectService(this)")
               .card-title= s.name
               .card-meta
                 i.bi.bi-clock
@@ -336,6 +336,12 @@ html(lang="en")
                   span.summary-label Total
                   span.summary-value(style="color:var(--primary);font-size:1.1rem;")#sum-price
               
+              .input-group.mt-3#promo-container
+                input.form-control.form-control-sm(type="text" id="promo-code" placeholder="Promo Code")
+                button.btn.btn-outline-secondary.btn-sm(type="button" onclick="applyPromo()") Apply
+              .form-text.text-danger#promo-error(style="display:none;")
+              .form-text.text-success#promo-success(style="display:none;")
+              
           .col-md-6
             form#booking-form
               .row
@@ -354,6 +360,9 @@ html(lang="en")
               .form-group
                 label.form-label Additional Notes (Optional)
                 textarea.form-control(id="bf-notes" rows="2")
+              
+              #custom-questions-container
+              
               #payment-gateway-selection(style="display:none;")
                 h5.mt-4 Payment Method
                 if settings.stripe_enabled === '1'
@@ -380,7 +389,10 @@ html(lang="en")
         date: null, time: null,
         currentMonth: new Date().getMonth(),
         currentYear: new Date().getFullYear(),
-        availableDates: []
+        availableDates: [],
+        couponId: null,
+        discountAmount: 0,
+        customQuestions: []
       };
 
       // Navigation
@@ -403,14 +415,6 @@ html(lang="en")
           nextBtn.style.display = 'none';
           submitBtn.style.display = 'inline-flex';
           updateSummary();
-          
-          // Show payment gateway if price exists
-          const gatewayDiv = document.getElementById('payment-gateway-selection');
-          if (gatewayDiv && parseFloat(state.price) > 0) {
-              gatewayDiv.style.display = 'block';
-          } else if (gatewayDiv) {
-              gatewayDiv.style.display = 'none';
-          }
         } else {
           nextBtn.style.display = 'inline-flex';
           submitBtn.style.display = 'none';
@@ -446,7 +450,30 @@ html(lang="en")
         state.serviceId = el.dataset.serviceId;
         state.serviceName = el.dataset.serviceName;
         state.price = el.dataset.price;
+        
+        try {
+          state.customQuestions = JSON.parse(el.dataset.customQuestions || "[]");
+        } catch(e) { state.customQuestions = []; }
+        
+        renderCustomQuestions();
+        
         validateStep();
+      }
+      
+      function renderCustomQuestions() {
+        const container = document.getElementById('custom-questions-container');
+        container.innerHTML = '';
+        if (!state.customQuestions || state.customQuestions.length === 0) return;
+        
+        state.customQuestions.forEach((q, idx) => {
+          const div = document.createElement('div');
+          div.className = 'form-group';
+          div.innerHTML = `
+            <label class="form-label">${q}</label>
+            <input class="form-control custom-q-input" type="text" data-question="${q}" required>
+          `;
+          container.appendChild(div);
+        });
       }
 
       // Step 2: Provider
@@ -571,7 +598,56 @@ html(lang="en")
         document.getElementById('sum-date').innerText = new Date(state.date).toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
         document.getElementById('sum-time').innerText = state.time;
         if(document.getElementById('sum-price')) {
-           document.getElementById('sum-price').innerText = parseFloat(state.price) > 0 ? ('£' + state.price) : 'Free';
+           const finalPrice = Math.max(0, parseFloat(state.price) - state.discountAmount).toFixed(2);
+           document.getElementById('sum-price').innerText = finalPrice > 0 ? ('£' + finalPrice) : 'Free';
+           
+           const gatewayDiv = document.getElementById('payment-gateway-selection');
+           if (gatewayDiv && finalPrice > 0) {
+               gatewayDiv.style.display = 'block';
+           } else if (gatewayDiv) {
+               gatewayDiv.style.display = 'none';
+           }
+        }
+      }
+
+      async function applyPromo() {
+        const code = document.getElementById('promo-code').value.trim();
+        const errEl = document.getElementById('promo-error');
+        const sucEl = document.getElementById('promo-success');
+        errEl.style.display = 'none';
+        sucEl.style.display = 'none';
+        
+        if (!code) return;
+        
+        try {
+          const res = await fetch('/settings/coupons/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errEl.innerText = data.error;
+            errEl.style.display = 'block';
+            state.couponId = null;
+            state.discountAmount = 0;
+            updateSummary();
+            return;
+          }
+          
+          state.couponId = data.id;
+          if (data.type === 'percentage') {
+            state.discountAmount = parseFloat(state.price) * (data.discount / 100);
+          } else {
+            state.discountAmount = parseFloat(data.discount);
+          }
+          
+          sucEl.innerText = `Promo code applied! (-£${state.discountAmount.toFixed(2)})`;
+          sucEl.style.display = 'block';
+          updateSummary();
+        } catch (e) {
+          errEl.innerText = 'Network error checking promo code.';
+          errEl.style.display = 'block';
         }
       }
 
@@ -591,6 +667,11 @@ html(lang="en")
         txt.innerText = ' Processing...';
 
         const gateway = document.querySelector('input[name="gateway"]:checked');
+        
+        const customFields = {};
+        document.querySelectorAll('.custom-q-input').forEach(input => {
+           customFields[input.dataset.question] = input.value;
+        });
 
         const payload = {
           service_id: state.serviceId,
@@ -602,7 +683,9 @@ html(lang="en")
           email: document.getElementById('bf-email').value,
           phone: document.getElementById('bf-phone').value,
           notes: document.getElementById('bf-notes').value,
-          gateway: gateway ? gateway.value : null
+          gateway: gateway ? gateway.value : null,
+          coupon_id: state.couponId,
+          custom_fields: JSON.stringify(customFields)
         };
 
         try {

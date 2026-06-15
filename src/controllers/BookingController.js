@@ -11,6 +11,7 @@ const WebhookService = require('../services/WebhookService');
 const SmsService = require('../services/SmsService');
 const SettingModel = require('../models/Setting');
 const PayPalService = require('../services/PayPalService');
+const CouponModel = require('../models/Coupon');
 const dayjs = require('dayjs');
 
 class BookingController {
@@ -65,11 +66,27 @@ class BookingController {
 
   static async book(req, res) {
     try {
-      const { service_id, provider_id, date, time, first_name, last_name, email, phone, notes, gateway = 'stripe' } = req.body;
+      const { service_id, provider_id, date, time, first_name, last_name, email, phone, notes, gateway = 'stripe', coupon_id } = req.body;
 
       const service  = await ServiceModel.findById(service_id);
       const provider = await UserModel.findById(provider_id);
       if (!service || !provider) return res.status(400).json({ error: 'Invalid service or provider.' });
+
+      // Apply Coupon
+      let finalPrice = parseFloat(service.price);
+      if (coupon_id) {
+        const coupon = await CouponModel.findById(coupon_id);
+        if (coupon && coupon.is_active) {
+          if (coupon.type === 'percentage') {
+            finalPrice -= finalPrice * (coupon.discount / 100);
+          } else {
+            finalPrice -= parseFloat(coupon.discount);
+          }
+          finalPrice = Math.max(0, finalPrice);
+          // Increment usage
+          await CouponModel.incrementUsage(coupon.id);
+        }
+      }
 
       const startDt = dayjs(`${date} ${time}`, 'YYYY-MM-DD HH:mm').toDate();
       const endDt   = dayjs(startDt).add(service.duration, 'minute').toDate();
@@ -88,25 +105,28 @@ class BookingController {
         service_id:     parseInt(service_id),
         provider_id:    parseInt(provider_id),
         customer_id:    customer.id,
-        status:         service.requires_payment ? 'pending' : 'confirmed',
-        notes:          notes || null
+        coupon_id:      coupon_id ? parseInt(coupon_id) : null,
+        status:         (service.requires_payment && finalPrice > 0) ? 'pending' : 'confirmed',
+        notes:          notes || null,
+        custom_fields:  req.body.custom_fields || null
       });
 
       // If service requires payment
-      if (service.requires_payment && parseFloat(service.price) > 0) {
+      if (service.requires_payment && finalPrice > 0) {
         const settings = await SettingModel.getAll();
 
         if (gateway === 'paypal' && settings.paypal_enabled === '1') {
           const order = await PayPalService.createOrder({
             appointment,
             service,
+            amount: finalPrice,
             appUrl: process.env.APP_URL || 'http://localhost:3000'
           });
 
           await PaymentModel.create({
             appointment_id: appointment.id,
             paypal_order_id: order.id,
-            amount: service.price,
+            amount: finalPrice,
             currency: service.currency || 'GBP',
             status: 'pending',
             gateway: 'paypal'
@@ -121,13 +141,14 @@ class BookingController {
             appointment,
             service,
             customer,
+            amount: finalPrice,
             appUrl: process.env.APP_URL || 'http://localhost:3000'
           });
           
           await PaymentModel.create({
             appointment_id:   appointment.id,
             stripe_session_id: session.id,
-            amount:            service.price,
+            amount:            finalPrice,
             currency:          service.currency || 'GBP',
             status:            'pending',
             gateway:           'stripe'

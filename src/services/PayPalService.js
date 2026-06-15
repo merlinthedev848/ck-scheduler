@@ -22,9 +22,10 @@ class PayPalService {
   /**
    * Create a PayPal Order
    */
-  static async createOrder({ appointment, service, appUrl }) {
+  static async createOrder({ appointment, service, amount, appUrl }) {
     const client = await this.getClient();
     const currency = (service.currency || 'GBP').toUpperCase();
+    const amountVal = parseFloat(amount).toFixed(2);
 
     const request = new checkoutNodeJssdk.orders.OrdersCreateRequest();
     request.prefer("return=representation");
@@ -35,7 +36,7 @@ class PayPalService {
         description: `Appointment: ${service.name}`,
         amount: {
           currency_code: currency,
-          value: parseFloat(service.price).toFixed(2)
+          value: amountVal
         }
       }],
       application_context: {

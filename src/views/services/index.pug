@@ -61,6 +61,10 @@ block content
                           .form-check.form-switch
                             input.form-check-input(type="checkbox" name="requires_payment" value="1" checked=(s.requires_payment===1))
                             label.form-check-label Require payment during booking
+                        .mb-3
+                          label.form-label Custom Intake Questions (Comma separated)
+                          - const qVal = s.custom_questions ? (typeof s.custom_questions === 'string' ? JSON.parse(s.custom_questions).join(', ') : s.custom_questions.join(', ')) : ''
+                          input.form-control(type="text" name="custom_questions" value=qVal placeholder="e.g. Age, Any allergies?")
                       .modal-footer
                         button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancel
                         button.btn.btn-primary(type="submit") Save Changes
@@ -97,6 +101,9 @@ block content
               .form-check.form-switch
                 input.form-check-input(type="checkbox" name="requires_payment" value="1")
                 label.form-check-label Require payment during booking
+            .mb-3
+              label.form-label Custom Intake Questions (Comma separated)
+              input.form-control(type="text" name="custom_questions" placeholder="e.g. Age, Any allergies?")
           .modal-footer
             button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancel
             button.btn.btn-primary(type="submit") Add Service

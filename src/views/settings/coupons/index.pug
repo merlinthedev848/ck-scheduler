@@ -1,0 +1,65 @@
+extends ../../layout
+
+block content
+  .row
+    .col-md-3
+      include ../_menu
+    
+    .col-md-9
+      .d-flex.justify-content-between.align-items-center.mb-3
+        h4 Promo Codes
+        a.btn.btn-primary(href="/settings/coupons/create")
+          i.bi.bi-plus-lg
+          |  Add Code
+
+      .card.shadow-sm
+        .card-body.p-0
+          if coupons && coupons.length > 0
+            .table-responsive
+              table.table.table-hover.mb-0
+                thead.table-light
+                  tr
+                    th Code
+                    th Discount
+                    th Usage
+                    th Expiry
+                    th Status
+                    th.text-end Manage
+                tbody
+                  each c in coupons
+                    tr
+                      td.align-middle: code.fw-bold.fs-6= c.code
+                      td.align-middle
+                        if c.type === 'percentage'
+                          span.badge.bg-info #{c.discount}% OFF
+                        else
+                          span.badge.bg-info £#{c.discount} OFF
+                      td.align-middle
+                        | #{c.used_count} 
+                        if c.usage_limit
+                          span.text-muted / #{c.usage_limit}
+                        else
+                          span.text-muted / ∞
+                      td.align-middle
+                        if c.expires_at
+                          - const exp = new Date(c.expires_at)
+                          if exp < new Date()
+                            span.text-danger Expired
+                          else
+                            | #{exp.toLocaleDateString()}
+                        else
+                          span.text-muted Never
+                      td.align-middle
+                        if c.is_active
+                          span.badge.bg-success Active
+                        else
+                          span.badge.bg-danger Inactive
+                      td.align-middle.text-end
+                        a.btn.btn-sm.btn-outline-primary.me-2(href=`/settings/coupons/${c.id}/edit`) Edit
+                        form.d-inline(action=`/settings/coupons/${c.id}?_method=DELETE` method="POST" onsubmit="return confirm('Are you sure you want to delete this promo code?');")
+                          button.btn.btn-sm.btn-outline-danger(type="submit") Delete
+          else
+            .p-5.text-center.text-muted
+              i.bi.bi-tags.display-4.mb-3
+              h5 No Promo Codes
+              p Give your customers a discount by creating your first promo code.

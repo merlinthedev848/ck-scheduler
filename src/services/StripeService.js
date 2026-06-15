@@ -11,10 +11,10 @@ class StripeService {
   /**
    * Create a Stripe Checkout Session for an appointment.
    */
-  static async createCheckoutSession({ appointment, service, customer, appUrl }) {
+  static async createCheckoutSession({ appointment, service, customer, amount, appUrl }) {
     const stripe = await this.getClient();
     const currency = (service.currency || 'GBP').toLowerCase();
-    const amountPence = Math.round(parseFloat(service.price) * 100);
+    const amountPence = Math.round(parseFloat(amount) * 100);
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',

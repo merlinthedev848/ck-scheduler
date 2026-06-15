@@ -1,5 +1,7 @@
 const nodemailer = require('nodemailer');
 const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc);
 
 class EmailService {
   static getTransporter() {
@@ -28,7 +30,9 @@ class EmailService {
       date:     dayjs(appt.start_datetime).format('dddd, D MMMM YYYY'),
       time:     dayjs(appt.start_datetime).format('HH:mm'),
       location: appt.location || 'Online / TBC',
-      hash:     appt.hash
+      hash:     appt.hash,
+      start_datetime: appt.start_datetime,
+      end_datetime: appt.end_datetime
     };
   }
 
@@ -59,10 +63,28 @@ class EmailService {
         </div>
       </div>`;
 
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//CK Scheduler//EN
+BEGIN:VEVENT
+UID:${t.hash}@ckscheduler.local
+DTSTAMP:${dayjs().format('YYYYMMDDTHHmmss\\Z')}
+DTSTART:${dayjs(t.start_datetime).utc().format('YYYYMMDDTHHmmss\\Z')}
+DTEND:${dayjs(t.end_datetime).utc().format('YYYYMMDDTHHmmss\\Z')}
+SUMMARY:${t.service} with ${t.provider}
+LOCATION:${t.location}
+END:VEVENT
+END:VCALENDAR`;
+
     await this.send({
       to:      appt.customer_email,
       subject: `Appointment Confirmed — ${t.service} on ${t.date}`,
-      html
+      html,
+      attachments: [{
+        filename: 'invite.ics',
+        content: icsContent,
+        contentType: 'text/calendar'
+      }]
     });
 
     // Notify provider
@@ -110,14 +132,14 @@ class EmailService {
     await this.send({ to: email, subject: 'Reset Your CK Scheduler Password', html });
   }
 
-  static async send({ to, subject, html, text }) {
+  static async send({ to, subject, html, text, attachments }) {
     if (!process.env.SMTP_USER) {
       console.log(`[Email] Would send to: ${to} | Subject: ${subject}`);
       return;
     }
     try {
       const transporter = this.getTransporter();
-      await transporter.sendMail({ from: this.from(), to, subject, html, text });
+      await transporter.sendMail({ from: this.from(), to, subject, html, text, attachments });
     } catch (err) {
       console.error('[Email] Failed to send:', err.message);
     }

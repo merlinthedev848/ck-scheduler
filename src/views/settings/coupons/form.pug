@@ -1,0 +1,48 @@
+extends ../../layout
+
+block content
+  .row
+    .col-md-3
+      include ../_menu
+    
+    .col-md-9
+      .card.shadow-sm
+        .card-header.bg-white
+          h5.m-0= title
+        .card-body
+          - const isEdit = !!coupon.id
+          - const actionUrl = isEdit ? `/settings/coupons/${coupon.id}?_method=PUT` : '/settings/coupons'
+          
+          form(action=actionUrl method="POST")
+            .mb-3
+              label.form-label Promo Code
+              input.form-control.text-uppercase(type="text" name="code" value=coupon.code required placeholder="e.g. SUMMER20" maxlength="50")
+              .form-text Customers will type this at checkout.
+            
+            .row.mb-3
+              .col-md-6
+                label.form-label Discount Type
+                select.form-select(name="type" required)
+                  option(value="percentage" selected=(coupon.type==='percentage')) Percentage (%)
+                  option(value="fixed" selected=(coupon.type==='fixed')) Fixed Amount (£)
+              .col-md-6
+                label.form-label Discount Value
+                input.form-control(type="number" step="0.01" min="0" name="discount" value=coupon.discount required)
+            
+            .row.mb-4
+              .col-md-6
+                label.form-label Usage Limit (Optional)
+                input.form-control(type="number" min="1" name="usage_limit" value=coupon.usage_limit placeholder="Leave blank for unlimited")
+              .col-md-6
+                label.form-label Expiration Date (Optional)
+                - const expVal = coupon.expires_at ? new Date(coupon.expires_at).toISOString().slice(0,16) : ''
+                input.form-control(type="datetime-local" name="expires_at" value=expVal)
+            
+            .mb-4
+              .form-check.form-switch
+                input.form-check-input(type="checkbox" name="is_active" value="1" id="is_active" checked=(isEdit ? coupon.is_active : true))
+                label.form-check-label(for="is_active") Active
+            
+            .d-flex.justify-content-between
+              a.btn.btn-outline-secondary(href="/settings/coupons") Cancel
+              button.btn.btn-primary(type="submit") Save Promo Code
