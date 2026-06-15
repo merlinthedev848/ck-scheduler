@@ -1,0 +1,25 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title #{title}
+    link(href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css", rel="stylesheet")
+    link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css")
+    style.
+      body { background-color: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Inter', sans-serif; }
+      .card { border: none; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 3rem; max-width: 500px; width: 100%; text-align: center; }
+      .icon-circle { width: 80px; height: 80px; border-radius: 50%; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem; }
+  body
+    .card
+      .icon-circle: i.bi.bi-check-lg
+      h2.mb-3 Booking Confirmed!
+      p.text-muted.mb-4 Thank you, #{appt.customer_first_name}. Your appointment for <strong>#{appt.service_name}</strong> is confirmed for:
+      h4.mb-1= new Date(appt.start_datetime).toLocaleDateString(undefined, {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})
+      h5.text-primary.mb-4= new Date(appt.start_datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      
+      p.small.text-muted A confirmation email has been sent to #{appt.customer_email}.
+      
+      .mt-4
+        a.btn.btn-outline-danger.btn-sm(href=`/booking/cancel/${appt.hash}`) Need to cancel?
+        a.btn.btn-primary.btn-sm.ms-2(href="/") Book Another

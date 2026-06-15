@@ -1,0 +1,61 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title #{title}
+    link(href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css", rel="stylesheet")
+    style.
+      body {
+        background-color: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        background: white;
+      }
+
+  body
+    .login-card
+      .text-center.mb-4
+        h3 CK Scheduler
+        p.text-muted Password Recovery
+      
+      if messages && messages.error && messages.error.length > 0
+        .alert.alert-danger
+          each msg in messages.error
+            div= msg
+            
+      if messages && messages.success && messages.success.length > 0
+        .alert.alert-success
+          each msg in messages.success
+            div= msg
+
+      if step === 'request'
+        form(action="/recovery" method="POST")
+          .mb-4
+            label.form-label Email Address
+            input.form-control(type="email" name="email" required autofocus)
+            .form-text We will send you a link to reset your password.
+          button.btn.btn-primary.w-100.mb-3(type="submit") Send Reset Link
+          .text-center
+            a.text-decoration-none.small(href="/login") Back to login
+
+      if step === 'reset'
+        form(action=`/recovery/${token}` method="POST")
+          .mb-3
+            label.form-label New Password
+            input.form-control(type="password" name="password" required autofocus)
+          .mb-4
+            label.form-label Confirm New Password
+            input.form-control(type="password" name="password_confirm" required)
+          button.btn.btn-primary.w-100.mb-3(type="submit") Reset Password
+
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js")

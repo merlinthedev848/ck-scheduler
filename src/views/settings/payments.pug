@@ -1,0 +1,35 @@
+extends ../layout
+
+block content
+  .row
+    .col-md-3
+      .list-group.mb-4
+        a.list-group-item.list-group-item-action(href="/settings/general") General
+        a.list-group-item.list-group-item-action(href="/settings/business") Business Logic
+        a.list-group-item.list-group-item-action(href="/settings/booking") Booking Page
+        a.list-group-item.list-group-item-action.active(href="/settings/payments") Payments
+        a.list-group-item.list-group-item-action(href="/settings/api") API Access
+    
+    .col-md-9
+      .card.shadow-sm
+        .card-header.bg-white
+          h5.m-0 Stripe Payment Integration
+        .card-body
+          form(action="/settings/payments" method="POST")
+            .mb-4
+              .form-check.form-switch
+                input.form-check-input(type="checkbox" name="stripe_enabled" value="1" checked=(settings.stripe_enabled==='1'))
+                label.form-check-label Enable Stripe Payments
+            
+            .mb-3
+              label.form-label Stripe Public Key
+              input.form-control(type="text" name="stripe_public_key" value=settings.stripe_public_key placeholder="pk_test_...")
+            .mb-3
+              label.form-label Stripe Secret Key
+              input.form-control(type="password" name="stripe_secret_key" value=settings.stripe_secret_key placeholder="sk_test_...")
+            .mb-3
+              label.form-label Stripe Webhook Secret
+              input.form-control(type="password" name="stripe_webhook_secret" value=settings.stripe_webhook_secret placeholder="whsec_...")
+              .form-text Required to verify webhook signatures. Webhook URL: <code>https://yourdomain.com/payments/webhook</code>
+            
+            button.btn.btn-primary(type="submit") Save Settings

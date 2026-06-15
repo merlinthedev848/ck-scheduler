@@ -1,0 +1,141 @@
+extends ../layout
+
+block styles
+  link(href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css', rel='stylesheet')
+  style.
+    .fc-event { cursor: pointer; }
+    .fc-header-toolbar { flex-wrap: wrap; gap: 1rem; }
+
+block content
+  .row.mb-3
+    .col-md-3
+      select#providerFilter.form-select
+        if session.user.role !== 'provider'
+          option(value="") All Providers
+        each p in providers
+          option(value=p.id)= p.first_name + ' ' + p.last_name
+    .col-md-9.text-end
+      button.btn.btn-primary(data-bs-toggle="modal", data-bs-target="#addAppointmentModal") 
+        i.bi.bi-plus-lg 
+        | New Appointment
+
+  .card.shadow-sm
+    .card-body
+      #calendar
+
+  // Add Appointment Modal
+  #addAppointmentModal.modal.fade(tabindex="-1")
+    .modal-dialog.modal-lg
+      .modal-content
+        form(action="/appointments" method="POST")
+          .modal-header
+            h5.modal-title New Appointment
+            button.btn-close(type="button" data-bs-dismiss="modal")
+          .modal-body
+            .row.g-3
+              .col-md-6
+                label.form-label Service
+                select.form-select(name="service_id" required)
+                  each s in services
+                    option(value=s.id)= s.name
+              .col-md-6
+                label.form-label Provider
+                select.form-select(name="provider_id" required)
+                  each p in providers
+                    option(value=p.id)= p.first_name + ' ' + p.last_name
+              .col-md-6
+                label.form-label Customer First Name
+                input.form-control(type="text" name="customer_first_name" required)
+              .col-md-6
+                label.form-label Customer Last Name
+                input.form-control(type="text" name="customer_last_name" required)
+              .col-md-6
+                label.form-label Customer Email
+                input.form-control(type="email" name="customer_email" required)
+              .col-md-6
+                label.form-label Customer Phone
+                input.form-control(type="tel" name="customer_phone")
+              .col-md-6
+                label.form-label Date
+                input.form-control(type="date" name="date" required)
+              .col-md-6
+                label.form-label Time
+                input.form-control(type="time" name="time" required)
+              .col-12
+                label.form-label Notes
+                textarea.form-control(name="notes" rows="2")
+          .modal-footer
+            button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.btn-primary(type="submit") Create Appointment
+
+  // Event Details Modal
+  #eventModal.modal.fade(tabindex="-1")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5.modal-title Appointment Details
+          button.btn-close(type="button" data-bs-dismiss="modal")
+        .modal-body
+          table.table.table-borderless
+            tbody
+              tr
+                th Customer:
+                td#evtCustomer
+              tr
+                th Service:
+                td#evtService
+              tr
+                th Provider:
+                td#evtProvider
+              tr
+                th Status:
+                td
+                  span#evtStatus.badge.bg-primary
+        .modal-footer
+          a#evtLink.btn.btn-primary(href="#") Edit Details
+          button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Close
+
+block scripts
+  script(src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js')
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      var calendarEl = document.getElementById('calendar');
+      var providerFilter = document.getElementById('providerFilter');
+      
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        slotMinTime: '08:00:00',
+        slotMaxTime: '20:00:00',
+        allDaySlot: false,
+        events: function(info, successCallback, failureCallback) {
+          var url = '/calendar/events?start=' + info.startStr + '&end=' + info.endStr;
+          if (providerFilter.value) url += '&providerId=' + providerFilter.value;
+          
+          fetch(url)
+            .then(res => res.json())
+            .then(data => successCallback(data))
+            .catch(err => failureCallback(err));
+        },
+        eventClick: function(info) {
+          var p = info.event.extendedProps;
+          document.getElementById('evtCustomer').textContent = p.customer;
+          document.getElementById('evtService').textContent = p.service;
+          document.getElementById('evtProvider').textContent = p.provider;
+          document.getElementById('evtStatus').textContent = p.status.toUpperCase();
+          document.getElementById('evtLink').href = '/appointments/' + info.event.id;
+          
+          var modal = new bootstrap.Modal(document.getElementById('eventModal'));
+          modal.show();
+        }
+      });
+      calendar.render();
+
+      providerFilter.addEventListener('change', function() {
+        calendar.refetchEvents();
+      });
+    });

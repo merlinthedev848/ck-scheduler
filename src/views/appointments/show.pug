@@ -1,0 +1,57 @@
+extends ../layout
+
+block content
+  .row
+    .col-md-8
+      .card.shadow-sm.mb-4
+        .card-header.bg-white.d-flex.justify-content-between.align-items-center
+          h5.m-0 Appointment Information
+          form(action=`/appointments/${appt.id}?_method=DELETE` method="POST" onsubmit="return confirm('Delete this appointment?');")
+            button.btn.btn-sm.btn-outline-danger(type="submit") Delete
+        .card-body
+          form(action=`/appointments/${appt.id}?_method=PUT` method="POST")
+            .row.g-3
+              .col-md-6
+                label.form-label Customer Name
+                input.form-control(type="text" value=`${appt.customer_first_name} ${appt.customer_last_name}` disabled)
+              .col-md-6
+                label.form-label Customer Email
+                input.form-control(type="text" value=appt.customer_email disabled)
+              .col-md-6
+                label.form-label Service
+                input.form-control(type="text" value=appt.service_name disabled)
+              .col-md-6
+                label.form-label Provider
+                input.form-control(type="text" value=`${appt.provider_first_name} ${appt.provider_last_name}` disabled)
+              .col-md-6
+                label.form-label Start Time
+                input.form-control(type="datetime-local" value=appt.start_datetime.toISOString().slice(0,16) disabled)
+              .col-md-6
+                label.form-label End Time
+                input.form-control(type="datetime-local" value=appt.end_datetime.toISOString().slice(0,16) disabled)
+              .col-md-6
+                label.form-label Status
+                select.form-select(name="status")
+                  option(value="pending" selected=(appt.status==='pending')) Pending
+                  option(value="confirmed" selected=(appt.status==='confirmed')) Confirmed
+                  option(value="cancelled" selected=(appt.status==='cancelled')) Cancelled
+              .col-12
+                label.form-label Notes
+                textarea.form-control(name="notes" rows="4")= appt.notes
+            .mt-3.text-end
+              button.btn.btn-primary(type="submit") Update Appointment
+    .col-md-4
+      .card.shadow-sm
+        .card-header.bg-white
+          h5.m-0 Payment Information
+        .card-body
+          if appt.payment_status
+            dl.row.m-0
+              dt.col-sm-4 Amount
+              dd.col-sm-8= appt.payment_amount
+              dt.col-sm-4 Status
+              dd.col-sm-8
+                span.badge(class=`bg-${appt.payment_status === 'paid' ? 'success' : 'secondary'}`)
+                  | #{appt.payment_status}
+          else
+            p.text-muted.mb-0 No payment record for this appointment.

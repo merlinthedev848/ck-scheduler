@@ -1,0 +1,50 @@
+extends ../layout
+
+block content
+  .card.shadow-sm
+    .card-header.bg-white.d-flex.justify-content-between.align-items-center
+      h5.m-0 All Appointments
+      form.d-flex.gap-2(method="GET" action="/appointments")
+        select.form-select.form-select-sm(name="status" onchange="this.form.submit()")
+          option(value="") All Statuses
+          option(value="pending" selected=(status==='pending')) Pending
+          option(value="confirmed" selected=(status==='confirmed')) Confirmed
+          option(value="cancelled" selected=(status==='cancelled')) Cancelled
+        input.form-control.form-control-sm(type="search" name="search" placeholder="Search..." value=search)
+        button.btn.btn-outline-secondary.btn-sm(type="submit") Search
+    .card-body.p-0
+      .table-responsive
+        table.table.table-hover.m-0
+          thead.table-light
+            tr
+              th Date & Time
+              th Customer
+              th Service
+              th Provider
+              th Status
+              th Actions
+          tbody
+            each a in appts
+              tr
+                td
+                  div= new Date(a.start_datetime).toLocaleDateString()
+                  small.text-muted= new Date(a.start_datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                td
+                  a.text-decoration-none(href=`/customers/${a.customer_id}`)= `${a.customer_first_name} ${a.customer_last_name}`
+                td= a.service_name
+                td= `${a.provider_first_name} ${a.provider_last_name}`
+                td
+                  span.badge(class=`bg-${a.status === 'confirmed' ? 'success' : (a.status === 'pending' ? 'warning' : 'danger')}`)
+                    | #{a.status}
+                td
+                  a.btn.btn-sm.btn-outline-primary(href=`/appointments/${a.id}`) View
+            if appts.length === 0
+              tr
+                td.text-center.py-4(colspan="6") No appointments found.
+    .card-footer.bg-white
+      nav
+        ul.pagination.pagination-sm.m-0.justify-content-end
+          li.page-item(class=(page <= 1 ? 'disabled' : ''))
+            a.page-link(href=`?page=${page-1}&search=${search||''}&status=${status||''}`) Previous
+          li.page-item
+            a.page-link(href=`?page=${page+1}&search=${search||''}&status=${status||''}`) Next

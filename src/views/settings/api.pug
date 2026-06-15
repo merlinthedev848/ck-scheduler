@@ -1,0 +1,45 @@
+extends ../layout
+
+block content
+  .row
+    .col-md-3
+      .list-group.mb-4
+        a.list-group-item.list-group-item-action(href="/settings/general") General
+        a.list-group-item.list-group-item-action(href="/settings/business") Business Logic
+        a.list-group-item.list-group-item-action(href="/settings/booking") Booking Page
+        a.list-group-item.list-group-item-action(href="/settings/payments") Payments
+        a.list-group-item.list-group-item-action.active(href="/settings/api") API Access
+    
+    .col-md-9
+      .card.shadow-sm
+        .card-header.bg-white
+          h5.m-0 API Access
+        .card-body
+          .alert.alert-info.mb-4
+            i.bi.bi-info-circle-fill.me-2
+            | Use this API token to authenticate requests to the REST API via the <code>X-Api-Key</code> header.
+            
+          .mb-4
+            label.form-label Your Personal API Token
+            .input-group
+              input.form-control#apiToken(type="text" value=user.api_token readonly)
+              button.btn.btn-outline-secondary(type="button" onclick="copyToken()")
+                i.bi.bi-clipboard
+                |  Copy
+          
+          hr.mb-4
+          
+          form(action="/settings/api/regenerate" method="POST" onsubmit="return confirm('Regenerating your token will invalidate any existing API integrations using the old token. Continue?');")
+            h6 Danger Zone
+            p.text-muted If you suspect your API token has been compromised, you can regenerate a new one.
+            button.btn.btn-outline-danger(type="submit") Regenerate API Token
+
+block scripts
+  script.
+    function copyToken() {
+      var copyText = document.getElementById("apiToken");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(copyText.value);
+      alert("Token copied to clipboard!");
+    }

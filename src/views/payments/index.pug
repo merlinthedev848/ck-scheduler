@@ -1,0 +1,51 @@
+extends ../layout
+
+block content
+  .row.mb-4
+    .col-md-4
+      .card.bg-success.text-white.shadow-sm
+        .card-body
+          h6 Total Revenue
+          h3.m-0= '£' + totalRevenue.toFixed(2)
+          
+  .card.shadow-sm
+    .card-header.bg-white
+      h5.m-0 Payment History
+    .card-body.p-0
+      .table-responsive
+        table.table.table-hover.m-0
+          thead.table-light
+            tr
+              th Date
+              th Customer
+              th Service
+              th Amount
+              th Status
+              th Actions
+          tbody
+            each p in payments
+              tr
+                td
+                  div= new Date(p.created_at).toLocaleDateString()
+                  small.text-muted= new Date(p.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                td
+                  a.text-decoration-none(href=`/appointments/${p.appointment_id}`)= `${p.first_name} ${p.last_name}`
+                td= p.service_name
+                td= p.currency + ' ' + p.amount
+                td
+                  span.badge(class=`bg-${p.status === 'paid' ? 'success' : (p.status === 'refunded' ? 'info' : 'secondary')}`)
+                    | #{p.status}
+                td
+                  if p.status === 'paid'
+                    form(action=`/payments/refund/${p.id}` method="POST" onsubmit="return confirm('Issue a full refund for this payment via Stripe? This action cannot be undone.');")
+                      button.btn.btn-sm.btn-outline-danger(type="submit") Refund
+            if payments.length === 0
+              tr
+                td.text-center.py-4(colspan="6") No payments found.
+    .card-footer.bg-white
+      nav
+        ul.pagination.pagination-sm.m-0.justify-content-end
+          li.page-item(class=(page <= 1 ? 'disabled' : ''))
+            a.page-link(href=`?page=${page-1}`) Previous
+          li.page-item
+            a.page-link(href=`?page=${page+1}`) Next
