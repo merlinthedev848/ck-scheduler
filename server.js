@@ -8,7 +8,7 @@ const path = require('path');
 const app = express();
 
 // ─── View Engine ─────────────────────────────────────────────────────────────
-app.set('view engine', 'ejs');
+app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'src/views'));
 
 // ─── Static Files ─────────────────────────────────────────────────────────────

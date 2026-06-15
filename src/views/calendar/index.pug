@@ -10,7 +10,7 @@ block content
   .row.mb-3
     .col-md-3
       select#providerFilter.form-select
-        if session.user.role !== 'provider'
+        if user && user.role !== 'provider'
           option(value="") All Providers
         each p in providers
           option(value=p.id)= p.first_name + ' ' + p.last_name

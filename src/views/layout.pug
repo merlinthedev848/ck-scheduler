@@ -30,7 +30,7 @@ html(lang="en")
             a.nav-link.text-white(href="/customers" class=(path && path.startsWith('/customers') ? 'active' : ''))
               i.bi.bi-people.me-2
               | Customers
-          if session && session.user && session.user.role === 'admin'
+          if user && user.role === 'admin'
             li
               a.nav-link.text-white(href="/services" class=(path && path.startsWith('/services') ? 'active' : ''))
                 i.bi.bi-briefcase.me-2
@@ -52,7 +52,7 @@ html(lang="en")
         .dropdown
           a.d-flex.align-items-center.text-white.text-decoration-none.dropdown-toggle(href="#" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false")
             i.bi.bi-person-circle.fs-4.me-2
-            strong= (session && session.user ? session.user.first_name : 'User')
+            strong= (user ? user.first_name : 'User')
           ul.dropdown-menu.dropdown-menu-dark.text-small.shadow(aria-labelledby="dropdownUser1")
             li: a.dropdown-item(href="/logout") Sign out
 
